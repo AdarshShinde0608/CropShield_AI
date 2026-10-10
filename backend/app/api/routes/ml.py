@@ -272,6 +272,8 @@ async def ml_warmup(
     current_user: CurrentUser,
 ) -> dict[str, str]:
     del current_user
+    if getattr(request.app.state, "ml_service_client", None) is None:
+        return {"status": "disabled"}
     client_ip = request.client.host if request.client else "unknown"
     limiter: LoginRateLimiter = request.app.state.ml_warmup_rate_limiter
     if not limiter.allow(client_ip):
@@ -293,23 +295,30 @@ async def get_model_info(
     database: DatabaseDep,
 ) -> dict[str, Any]:
     del current_user
-    client = _client(request)
-    try:
-        info = await client.model_info(_request_id(request))
-        return {**info, "source": "ml-service"}
-    except MLServiceError as error:
-        if error.code != "ML_WAKING":
-            raise _upstream_error(error) from error
+    client = getattr(request.app.state, "ml_service_client", None)
+    if client is not None:
+        try:
+            info = await client.model_info(_request_id(request))
+            return {**info, "source": "ml-service"}
+        except MLServiceError as error:
+            if error.code != "ML_WAKING":
+                raise _upstream_error(error) from error
     fallback = await database.model_artifacts.find_one(
         {"status": "active"},
         {"_id": 0},
     )
     if fallback is None:
+        unavailable_code = "ML_UNAVAILABLE" if client is None else "ML_WAKING"
+        unavailable_message = (
+            "ML service is disabled and no active model metadata is available"
+            if client is None
+            else "ML service is waking and no active model metadata is available"
+        )
         raise HTTPException(
             status_code=503,
             detail={
-                "detail": "ML service is waking and no active model metadata is available",
-                "code": "ML_WAKING",
+                "detail": unavailable_message,
+                "code": unavailable_code,
             },
         )
     return {

@@ -219,7 +219,17 @@ JWT_SECRET=change-me-long-random
 JWT_ALGORITHM=HS256
 JWT_EXPIRE_MINUTES=60
 CORS_ORIGINS=http://localhost:5173
+ML_SERVICE_ENABLED=false
+ML_SERVICE_URL=http://localhost:8001
+ML_SERVICE_API_KEY=
+ML_REQUEST_TIMEOUT_SECONDS=10
+ML_STATUS_TIMEOUT_SECONDS=5
 ```
+
+The default Render Blueprint is an API-only synthetic-data demo and keeps
+`ML_SERVICE_ENABLED=false`; it must not expose live scoring until the model
+approval and runtime gates in `MODEL_DECISION.md` pass. Enabling the optional
+ML service requires its HTTPS URL and a strong service key.
 
 `pipeline/.env.example`
 ```
@@ -370,7 +380,7 @@ cropshield-ai/
 | Part | Host | Notes |
 |---|---|---|
 | Frontend | Vercel or Netlify | set `VITE_API_BASE_URL` |
-| Backend | Render, Railway or Fly.io | set env vars, start with `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| Backend | Render native Python runtime | set env vars, start with `uvicorn --app-dir backend app.main:app --host 0.0.0.0 --port $PORT` |
 | Database | MongoDB Atlas free tier | allow the backend host's IPs |
 | Pipeline | Developer laptop | run once, then `load_to_mongo.py` against Atlas |
 

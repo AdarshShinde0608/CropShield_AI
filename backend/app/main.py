@@ -30,17 +30,22 @@ def create_app() -> FastAPI:
         client, database = await connect_to_mongo(settings)
         application.state.mongo_client = client
         application.state.db = database
-        ml_service_client = MLServiceClient(
-            settings.ml_service_url,
-            settings.ml_service_api_key,
-            settings.ml_request_timeout_seconds,
-            settings.ml_status_timeout_seconds,
+        ml_service_client = (
+            MLServiceClient(
+                settings.ml_service_url,
+                settings.ml_service_api_key,
+                settings.ml_request_timeout_seconds,
+                settings.ml_status_timeout_seconds,
+            )
+            if settings.ml_service_enabled
+            else None
         )
         application.state.ml_service_client = ml_service_client
         try:
             yield
         finally:
-            await ml_service_client.close()
+            if ml_service_client is not None:
+                await ml_service_client.close()
             client.close()
 
     application = FastAPI(

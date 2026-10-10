@@ -67,7 +67,10 @@ clearly when it is unset.
 
 The frontend is hosted on Vercel, the backend and optional ML service use
 Render's native Python runtime, and persistent data uses MongoDB Atlas. See
-[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md). No deployment is claimed.
+[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) for the demo-first sequence. The
+default Render Blueprint deploys only the API with live ML scoring disabled;
+it does not create a model service because no approved model artifact is
+available. No deployment is claimed.
 
 ## Model status
 

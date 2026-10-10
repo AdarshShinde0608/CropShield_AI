@@ -209,6 +209,28 @@ async def test_status_and_warmup_routes(ml_client: Any, shared_client: httpx.Asy
 
 
 @pytest.mark.asyncio
+async def test_optional_ml_can_be_disabled_without_upstream_requests(
+    ml_client: Any,
+    shared_client: httpx.AsyncClient,
+) -> None:
+    old_client = app.state.ml_service_client
+    app.state.ml_service_client = None
+    try:
+        status_response = await shared_client.get("/api/ml/status")
+        warmup_response = await shared_client.post("/api/ml/warmup")
+        model_info_response = await shared_client.get("/api/model-info")
+    finally:
+        app.state.ml_service_client = old_client
+
+    assert status_response.status_code == 503
+    assert status_response.json()["code"] == "ML_UNAVAILABLE"
+    assert warmup_response.status_code == 202
+    assert warmup_response.json() == {"status": "disabled"}
+    assert model_info_response.status_code == 503
+    assert model_info_response.json()["code"] == "ML_UNAVAILABLE"
+
+
+@pytest.mark.asyncio
 async def test_warmup_is_rate_limited(ml_client: Any, shared_client: httpx.AsyncClient) -> None:
     app.state.ml_warmup_rate_limiter = LoginRateLimiter(max_attempts=1)
     first = await shared_client.post("/api/ml/warmup")

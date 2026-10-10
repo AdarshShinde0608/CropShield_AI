@@ -39,6 +39,10 @@ class Settings(BaseSettings):
         default="http://localhost:8001",
         validation_alias="ML_SERVICE_URL",
     )
+    ml_service_enabled: bool = Field(
+        default=False,
+        validation_alias="ML_SERVICE_ENABLED",
+    )
     ml_service_api_key: str = Field(
         default="",
         validation_alias="ML_SERVICE_API_KEY",
@@ -80,6 +84,17 @@ class Settings(BaseSettings):
             or self.jwt_secret == "replace-with-a-random-secret-of-at-least-32-bytes"
         ):
             raise ValueError("Production requires a unique JWT_SECRET of at least 32 bytes")
+        if self.app_env == "production" and self.ml_service_enabled:
+            if len(self.ml_service_api_key.encode("utf-8")) < 32:
+                raise ValueError(
+                    "Production requires ML_SERVICE_API_KEY to be at least 32 bytes "
+                    "when ML_SERVICE_ENABLED is true"
+                )
+            if not self.ml_service_url.startswith("https://"):
+                raise ValueError(
+                    "Production ML_SERVICE_URL must use HTTPS when "
+                    "ML_SERVICE_ENABLED is true"
+                )
         return self
 
     @property

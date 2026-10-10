@@ -1,45 +1,5 @@
 services:
   - type: web
-    name: cropshield-ml
-    runtime: python
-    plan: free
-    region: oregon
-    buildCommand: pip install -r ml-service/requirements.txt && python scripts/fetch_model.py
-    startCommand: uvicorn --app-dir ml-service app.main:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /health
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.11
-      - key: APP_ENV
-        value: production
-      - key: MONGODB_URI
-        sync: false
-      - key: MONGODB_DB
-        value: cropshield
-      - key: ML_SERVICE_API_KEY
-        sync: false
-      - key: MODEL_VERSION
-        sync: false
-      - key: MODEL_ARTIFACT_URL
-        sync: false
-      - key: MODEL_ARTIFACT_SHA256
-        sync: false
-      - key: MODEL_DIR
-        value: models
-      - key: MODEL_REFRESH_INTERVAL_SECONDS
-        value: "60"
-      - key: MAX_REQUEST_BYTES
-        value: "1048576"
-      - key: MAX_BATCH_SIZE
-        value: "32"
-      - key: MAX_OBSERVATIONS_PER_FIELD
-        value: "180"
-      - key: RATE_LIMIT_REQUESTS_PER_MINUTE
-        value: "60"
-      - key: REQUEST_TIMEOUT_SECONDS
-        value: "30"
-
-  - type: web
     name: cropshield-api
     runtime: python
     plan: free
@@ -55,17 +15,15 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: MONGODB_DB
-        value: cropshield
+        value: cropshield_demo
       - key: JWT_SECRET
         sync: false
       - key: JWT_ALGORITHM
         value: HS256
       - key: JWT_EXPIRE_MINUTES
         value: "60"
-      - key: ML_SERVICE_API_KEY
-        sync: false
-      - key: ML_SERVICE_URL
-        value: https://cropshield-ml.onrender.com
+      - key: ML_SERVICE_ENABLED
+        value: "false"
       - key: ML_REQUEST_TIMEOUT_SECONDS
         value: "10"
       - key: ML_STATUS_TIMEOUT_SECONDS
